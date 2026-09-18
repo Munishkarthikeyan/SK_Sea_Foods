@@ -65,3 +65,36 @@ you on Telegram whenever a new order is placed.
 6. In Supabase: **Database → Webhooks** → new webhook on `orders`, event `Insert`,
    target the `notify-order` function.
 7. Place a test order and check Telegram.
+
+## Hosting on GitHub Pages
+
+This project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`)
+that builds and deploys automatically to GitHub Pages on every push to `main`.
+
+1. Create a new repo on GitHub, then from your project folder:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+   git push -u origin main
+   ```
+2. In your GitHub repo: **Settings → Pages → Build and deployment → Source** → select
+   **GitHub Actions**.
+3. In your GitHub repo: **Settings → Secrets and variables → Actions → New repository secret**.
+   Add two secrets: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (same values as your
+   local `.env`). These are injected at build time — your keys are never committed to the repo.
+4. If your repo is *not* named exactly `YOUR_USERNAME.github.io`, open `vite.config.ts`
+   and set the `base` option to your repo name, e.g.:
+   ```ts
+   export default defineConfig({
+     plugins: [react()],
+     base: '/your-repo-name/',
+   })
+   ```
+5. Push again (or re-run the workflow from the **Actions** tab). After it finishes, your
+   site will be live at `https://YOUR_USERNAME.github.io/your-repo-name/`.
+
+Note: the app uses `HashRouter` (URLs like `/#/admin`) instead of `BrowserRouter`,
+since GitHub Pages can't do the server-side rewrites that clean URLs need on a static host.
