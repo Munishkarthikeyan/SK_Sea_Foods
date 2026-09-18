@@ -17,7 +17,7 @@ export default function Home() {
   })
 
   return (
-    <main className="max-w-5xl mx-auto px-5 py-10">
+    <main className="max-w-10xl px-5 py-10">
       <div className="mb-8">
         <p className="text-xs uppercase tracking-wide text-catch-dark font-medium mb-1">
           Fresh in today
