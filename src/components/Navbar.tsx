@@ -10,7 +10,7 @@ export default function Navbar() {
       <div className="max-w-8xl px-5 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img
-            src="/Logo.png"
+            src={`${import.meta.env.BASE_URL}Logo.png`}
             alt="SK Sea Foods"
             className="h-10 w-10 object-contain"
           />
