@@ -11,6 +11,14 @@ export default function Admin() {
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({
+    name: '',
+    category: '',
+    price_per_kg: '',
+    stock_kg: '',
+  })
+  const [savingEdit, setSavingEdit] = useState(false)
 
   const { data: products } = useQuery({
     queryKey: ['products'],
@@ -108,6 +116,57 @@ export default function Admin() {
     }
   }
 
+  function startEdit(product: Product) {
+    setErrorMsg(null)
+    setEditingId(product.id)
+    setEditForm({
+      name: product.name,
+      category: product.category,
+      price_per_kg: String(product.price_per_kg),
+      stock_kg: String(product.stock_kg),
+    })
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+  }
+
+  async function saveEdit(productId: string) {
+    setSavingEdit(true)
+    setErrorMsg(null)
+    try {
+      const price_per_kg = Number(editForm.price_per_kg)
+      const stock_kg = Number(editForm.stock_kg)
+      if (!editForm.name.trim() || !editForm.category.trim()) {
+        throw new Error('Name and category are required.')
+      }
+      if (Number.isNaN(price_per_kg) || price_per_kg < 0) {
+        throw new Error('Price must be a valid, non-negative number.')
+      }
+      if (Number.isNaN(stock_kg) || stock_kg < 0) {
+        throw new Error('Stock must be a valid, non-negative number.')
+      }
+
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: editForm.name.trim(),
+          category: editForm.category.trim(),
+          price_per_kg,
+          stock_kg,
+        })
+        .eq('id', productId)
+      if (error) throw error
+
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      setEditingId(null)
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not save changes.')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   async function toggleAvailable(product: Product) {
     await supabase
       .from('products')
@@ -133,7 +192,7 @@ export default function Admin() {
   return (
     <main className="max-w-3xl mx-auto px-5 py-10">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl font-semibold">Shop dashboard</h1>
+        <h1 className="font-display text-2xl font-bold">Shop dashboard</h1>
         <button onClick={signOut} className="text-sm text-tide-400 hover:text-tide-900">
           Sign out
         </button>
@@ -142,7 +201,7 @@ export default function Admin() {
       <div className="flex gap-6 border-b border-tide-900/10 mb-8">
         <button
           onClick={() => setTab('catch')}
-          className={`pb-3 text-sm font-medium border-b-2 -mb-px ${
+          className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${
             tab === 'catch'
               ? 'border-tide-900 text-tide-900'
               : 'border-transparent text-tide-400 hover:text-tide-600'
@@ -152,7 +211,7 @@ export default function Admin() {
         </button>
         <button
           onClick={() => setTab('bulk')}
-          className={`pb-3 text-sm font-medium border-b-2 -mb-px ${
+          className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${
             tab === 'bulk'
               ? 'border-tide-900 text-tide-900'
               : 'border-transparent text-tide-400 hover:text-tide-600'
@@ -162,7 +221,7 @@ export default function Admin() {
         </button>
         <button
           onClick={() => setTab('orders')}
-          className={`pb-3 text-sm font-medium border-b-2 -mb-px ${
+          className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${
             tab === 'orders'
               ? 'border-tide-900 text-tide-900'
               : 'border-transparent text-tide-400 hover:text-tide-600'
@@ -195,6 +254,7 @@ export default function Admin() {
             name="price_per_kg"
             type="number"
             step="1"
+            min="0"
             required
             placeholder="Price per kg (₹)"
             className="border border-tide-900/20 px-3 py-2 bg-white flex-1"
@@ -203,6 +263,7 @@ export default function Admin() {
             name="stock_kg"
             type="number"
             step="0.5"
+            min="0"
             required
             placeholder="Stock (kg)"
             className="border border-tide-900/20 px-3 py-2 bg-white flex-1"
@@ -221,63 +282,127 @@ export default function Admin() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-tide-900 text-paper py-2.5 font-medium hover:bg-tide-800 transition-colors disabled:opacity-50"
+          className="bg-tide-900 text-paper py-2.5 font-semibold hover:bg-tide-800 transition-colors disabled:opacity-50"
         >
           {submitting ? 'Adding…' : 'Add item'}
         </button>
       </form>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display text-xl font-semibold">Current listings</h2>
+        <h2 className="font-display text-xl font-bold">Current listings</h2>
         <button onClick={markAllSoldOut} className="text-sm text-tide-400 hover:text-red-700">
           Mark all sold out
         </button>
       </div>
       {errorMsg && <p className="text-red-700 text-sm mb-3">{errorMsg}</p>}
       <div className="flex flex-col divide-y divide-tide-900/10 border-y border-tide-900/10">
-        {products?.map((p) => (
-          <div key={p.id} className="py-3 flex items-center gap-4">
-            <div className="w-14 h-14 bg-tide-900/5 flex-shrink-0 overflow-hidden">
-              {p.photo_url && (
-                <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover" />
-              )}
-            </div>
-            <div className="flex-1">
-              <p className="font-medium">{p.name}</p>
-              <p className="text-sm text-tide-400">
-                ₹{p.price_per_kg}/kg · {p.stock_kg} kg
-              </p>
-              <label className="text-xs text-tide-900 underline underline-offset-2 cursor-pointer">
-                {p.photo_url ? 'Change photo' : 'Add photo'}
+        {products?.map((p) =>
+          editingId === p.id ? (
+            <div key={p.id} className="py-3 flex flex-col gap-3 bg-sea-light/60 px-3 -mx-3">
+              <div className="flex gap-3">
                 <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) uploadPhotoFor(p.id, file)
-                  }}
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="Fish name"
+                  className="border border-tide-900/20 px-2 py-1.5 bg-white text-sm flex-1"
                 />
-              </label>
+                <input
+                  value={editForm.category}
+                  onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
+                  placeholder="Category"
+                  className="border border-tide-900/20 px-2 py-1.5 bg-white text-sm flex-1"
+                />
+              </div>
+              <div className="flex gap-3">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={editForm.price_per_kg}
+                  onChange={(e) => setEditForm((f) => ({ ...f, price_per_kg: e.target.value }))}
+                  placeholder="Price per kg (₹)"
+                  className="border border-tide-900/20 px-2 py-1.5 bg-white text-sm flex-1"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={editForm.stock_kg}
+                  onChange={(e) => setEditForm((f) => ({ ...f, stock_kg: e.target.value }))}
+                  placeholder="Stock (kg)"
+                  className="border border-tide-900/20 px-2 py-1.5 bg-white text-sm flex-1"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => saveEdit(p.id)}
+                  disabled={savingEdit}
+                  className="text-sm px-3 py-1.5 bg-tide-900 text-paper font-semibold hover:bg-tide-800 disabled:opacity-50"
+                >
+                  {savingEdit ? 'Saving…' : 'Save'}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  disabled={savingEdit}
+                  className="text-sm px-3 py-1.5 border border-tide-900/20 text-tide-600 hover:bg-white"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => toggleAvailable(p)}
-              className={`text-sm px-3 py-1 border ${
-                p.available
-                  ? 'border-tide-900/20 text-tide-900'
-                  : 'border-red-700/30 text-red-700'
-              }`}
+          ) : (
+            <div
+              key={p.id}
+              className="py-3 flex items-center gap-4 transition-colors hover:bg-sea-light/60 px-3 -mx-3"
             >
-              {p.available ? 'Available' : 'Sold out'}
-            </button>
-            <button
-              onClick={() => deleteProduct(p)}
-              className="text-sm px-3 py-1 border border-red-700/30 text-red-700 hover:bg-red-50"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
+              <div className="w-14 h-14 bg-tide-900/5 flex-shrink-0 overflow-hidden rounded">
+                {p.photo_url && (
+                  <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold">{p.name}</p>
+                <p className="text-sm text-tide-400">
+                  ₹{p.price_per_kg}/kg · {p.stock_kg} kg
+                </p>
+                <label className="text-xs text-tide-900 underline underline-offset-2 cursor-pointer">
+                  {p.photo_url ? 'Change photo' : 'Add photo'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) uploadPhotoFor(p.id, file)
+                    }}
+                  />
+                </label>
+              </div>
+              <button
+                onClick={() => toggleAvailable(p)}
+                className={`text-sm px-3 py-1 border ${
+                  p.available
+                    ? 'border-tide-900/20 text-tide-900'
+                    : 'border-red-700/30 text-red-700'
+                }`}
+              >
+                {p.available ? 'Available' : 'Sold out'}
+              </button>
+              <button
+                onClick={() => startEdit(p)}
+                className="text-sm px-3 py-1 border border-tide-900/20 text-tide-900 hover:bg-white"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => deleteProduct(p)}
+                className="text-sm px-3 py-1 border border-red-700/30 text-red-700 hover:bg-red-50"
+              >
+                Remove
+              </button>
+            </div>
+          )
+        )}
       </div>
         </>
       )}

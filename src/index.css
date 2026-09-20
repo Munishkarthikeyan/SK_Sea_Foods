@@ -3,5 +3,48 @@
 @tailwind utilities;
 
 body {
-  @apply bg-paper text-tide-900 font-body;
+  @apply text-tide-900 font-body font-medium;
+  background: linear-gradient(180deg, #eef9fa 0%, #e3f5f6 320px, #e3f5f6 100%);
+  min-height: 100vh;
+}
+
+/* Every fillable text/number/textarea field gets rounded 20px edges. */
+input:not([type='file']):not([type='checkbox']):not([type='radio']),
+textarea {
+  border-radius: 20px;
+}
+
+/* Native "Choose file" button: bigger, bold, black background, white text. */
+input[type='file']::file-selector-button {
+  background-color: #000;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 20px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  margin-right: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+input[type='file']::file-selector-button:hover {
+  background-color: #262626;
+}
+
+/* Product cards on the home page slide in from right to left, one by one. */
+@keyframes product-card-in {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.product-card-enter {
+  opacity: 0;
+  animation: product-card-in 1.5s ease forwards;
 }

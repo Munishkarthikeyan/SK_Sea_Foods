@@ -1,10 +1,12 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
 
 export default function Checkout() {
   const { lines, total, clearCart } = useCart()
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -58,6 +60,25 @@ export default function Checkout() {
       const { error: itemsError } = await supabase.from('order_items').insert(items)
       if (itemsError) throw itemsError
 
+      // 3. Decrement stock for each product ordered. This is intentionally
+      // "best effort" -- the order itself is already safely recorded above,
+      // so a stock-sync hiccup here shouldn't stop the customer's order from
+      // going through. We just log it for the shop owner to notice.
+      const stockResults = await Promise.all(
+        lines.map((l) =>
+          supabase.rpc('decrement_product_stock', {
+            p_product_id: l.product.id,
+            p_quantity_kg: l.quantity_kg,
+          })
+        )
+      )
+      const stockError = stockResults.find((r) => r.error)?.error
+      if (stockError) {
+        // eslint-disable-next-line no-console
+        console.error('Order placed, but stock update failed:', stockError.message)
+      }
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+
       clearCart()
       navigate('/order-confirmed')
     } catch (err) {
@@ -77,7 +98,7 @@ export default function Checkout() {
 
   return (
     <main className="max-w-lg mx-auto px-5 py-10">
-      <h1 className="font-display text-2xl font-semibold mb-2">Delivery details</h1>
+      <h1 className="font-display text-2xl font-bold mb-2">Delivery details</h1>
       <p className="text-sm text-tide-400 mb-6">
         Pay cash or UPI on delivery. Total: ₹{total.toFixed(0)}
       </p>
@@ -111,7 +132,7 @@ export default function Checkout() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-catch text-tide-900 font-medium py-3 hover:bg-catch-dark transition-colors disabled:opacity-50"
+          className="bg-catch text-tide-900 font-semibold py-3 hover:bg-catch-dark transition-colors disabled:opacity-50"
         >
           {submitting ? 'Placing order…' : 'Place order'}
         </button>

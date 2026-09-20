@@ -18,24 +18,28 @@ export default function Cart() {
 
   return (
     <main className="max-w-2xl mx-auto px-5 py-10">
-      <h1 className="font-display text-2xl font-semibold mb-6">Your cart</h1>
-      <div className="flex flex-col divide-y divide-tide-900/10 border-y border-tide-900/10">
+      <h1 className="font-display text-2xl font-bold mb-6">Your cart</h1>
+      <div className="flex flex-col divide-y divide-tide-900/10 border border-tide-900/10 bg-white/70 rounded-lg overflow-hidden">
         {lines.map((line) => (
-          <div key={line.product.id} className="py-4 flex items-center gap-4">
+          <div
+            key={line.product.id}
+            className="px-4 py-4 flex items-center gap-4 transition-colors hover:bg-sea-light"
+          >
             <div className="flex-1">
-              <p className="font-medium">{line.product.name}</p>
+              <p className="font-semibold">{line.product.name}</p>
               <p className="text-sm text-tide-400">₹{line.product.price_per_kg}/kg</p>
             </div>
             <input
               type="number"
               min={0.5}
+              max={line.product.stock_kg}
               step={0.5}
               value={line.quantity_kg}
               onChange={(e) => updateQuantity(line.product.id, Number(e.target.value))}
               className="w-16 border border-tide-900/20 px-2 py-1 text-sm bg-white"
             />
             <span className="text-sm text-tide-400">kg</span>
-            <p className="w-20 text-right font-medium">
+            <p className="w-20 text-right font-semibold">
               ₹{(line.product.price_per_kg * line.quantity_kg).toFixed(0)}
             </p>
             <button
@@ -49,11 +53,11 @@ export default function Cart() {
       </div>
       <div className="flex items-center justify-between mt-6">
         <span className="font-display text-xl">Total</span>
-        <span className="font-display text-xl font-semibold">₹{total.toFixed(0)}</span>
+        <span className="font-display text-xl font-bold">₹{total.toFixed(0)}</span>
       </div>
       <button
         onClick={() => navigate('/checkout')}
-        className="mt-6 w-full bg-tide-900 text-paper py-3 font-medium hover:bg-tide-800 transition-colors"
+        className="mt-6 w-full bg-tide-900 text-paper py-3 font-semibold hover:bg-tide-800 transition-colors"
       >
         Proceed to checkout
       </button>

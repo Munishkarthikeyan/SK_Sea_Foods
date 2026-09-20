@@ -58,6 +58,14 @@ create policy "Authenticated users can view orders"
   on orders for select
   using (auth.role() = 'authenticated');
 
+-- Needed so the shop owner can change status (new -> confirmed -> delivered)
+-- from the Orders tab in /admin. Without this, OrdersPanel's update calls are
+-- silently blocked by RLS (no error, but the status never actually changes).
+create policy "Authenticated users can update orders"
+  on orders for update
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
 create policy "Anyone can add order items"
   on order_items for insert
   with check (true);
@@ -93,3 +101,31 @@ create policy "Public can view photos"
 -- Add an items column to orders so the full order (including fish names)
 -- is available in a single row -- needed for reliable webhook notifications.
 alter table orders add column items jsonb;
+
+-- Decrements a product's stock when an order is placed.
+-- Customers are anonymous at checkout and only have INSERT rights on
+-- orders/order_items (see policies above) -- they do NOT have UPDATE rights
+-- on products, so a plain client-side update to stock_kg would be silently
+-- blocked by RLS. This function runs as SECURITY DEFINER (elevated
+-- privileges) so it can update stock on the customer's behalf, while only
+-- ever being callable through this one narrow, safe operation (subtract
+-- quantity, floor at 0, auto mark sold out at 0) rather than granting broad
+-- table access. The subtraction happens inside a single UPDATE statement, so
+-- Postgres row-locks it and two simultaneous checkouts can't both read the
+-- same stale stock_kg and oversell.
+create or replace function decrement_product_stock(p_product_id uuid, p_quantity_kg numeric)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update products
+  set
+    stock_kg = greatest(stock_kg - p_quantity_kg, 0),
+    available = case when (stock_kg - p_quantity_kg) <= 0 then false else available end
+  where id = p_product_id;
+end;
+$$;
+
+grant execute on function decrement_product_stock(uuid, numeric) to anon, authenticated;

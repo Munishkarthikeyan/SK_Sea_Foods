@@ -48,7 +48,7 @@ export default function OrdersPanel() {
         <div key={order.id} className="border border-tide-900/10 bg-white/60 p-4">
           <div className="flex items-start justify-between gap-4 mb-3">
             <div>
-              <p className="font-medium">{order.customer_name}</p>
+              <p className="font-semibold">{order.customer_name}</p>
               <p className="text-sm text-tide-400">{order.phone}</p>
               <p className="text-sm text-tide-600 mt-1">{order.address}</p>
               {order.notes && (
@@ -86,7 +86,7 @@ export default function OrdersPanel() {
           </div>
 
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-tide-900/10">
-            <span className="font-semibold">Total: ₹{order.total.toFixed(0)}</span>
+            <span className="font-bold">Total: ₹{order.total.toFixed(0)}</span>
             <div className="flex gap-2">
               {order.status !== 'confirmed' && order.status !== 'delivered' && (
                 <button

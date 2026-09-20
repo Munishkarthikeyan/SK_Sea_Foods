@@ -25,7 +25,7 @@ export default function Login() {
 
   return (
     <main className="max-w-sm mx-auto px-5 py-20">
-      <h1 className="font-display text-2xl font-semibold mb-6">Shop login</h1>
+      <h1 className="font-display text-2xl font-bold mb-6">Shop login</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           name="email"
@@ -45,7 +45,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-tide-900 text-paper py-2.5 font-medium hover:bg-tide-800 transition-colors disabled:opacity-50"
+          className="bg-tide-900 text-paper py-2.5 font-semibold hover:bg-tide-800 transition-colors disabled:opacity-50"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </button>

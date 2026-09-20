@@ -1,14 +1,23 @@
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { Product } from '../types'
 import { useCart } from '../context/CartContext'
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+  style,
+}: {
+  product: Product
+  style?: CSSProperties
+}) {
   const { addToCart } = useCart()
   const [qty, setQty] = useState(1)
   const soldOut = !product.available || product.stock_kg <= 0
 
   return (
-    <div className="border border-tide-900/10 bg-white/60 flex flex-col">
+    <div
+      style={style}
+      className="product-card-enter border border-tide-900/10 bg-white/70 flex flex-col rounded-[10px] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-sea/40"
+    >
       <div className="aspect-[4/3] bg-tide-900/5 overflow-hidden relative">
         {product.photo_url ? (
           <img
@@ -30,7 +39,7 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="p-4 flex flex-col gap-2 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="font-display text-lg leading-tight">{product.name}</h3>
-          <span className="text-catch-dark font-semibold whitespace-nowrap">
+          <span className="text-catch-dark font-bold whitespace-nowrap">
             ₹{product.price_per_kg}/kg
           </span>
         </div>
@@ -42,6 +51,7 @@ export default function ProductCard({ product }: { product: Product }) {
           <input
             type="number"
             min={0.5}
+            max={product.stock_kg}
             step={0.5}
             value={qty}
             onChange={(e) => setQty(Number(e.target.value))}

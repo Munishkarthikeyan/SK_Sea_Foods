@@ -19,12 +19,14 @@ export default function Home() {
   return (
     <main className="max-w-10xl px-5 py-10">
       <div className="mb-8">
-        <p className="text-xs uppercase tracking-wide text-catch-dark font-medium mb-1">
-          Fresh in today
-        </p>
-        <h1 className="font-display text-3xl font-semibold text-tide-900">
-          Today's catch, straight from the boat to your kitchen
-        </h1>
+        <center>
+          <p className="text-xs uppercase tracking-wide text-catch-dark font-semibold mb-1">
+            Fresh in today
+          </p>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight text-tide-900">
+            Today's catch, straight from the boat to your kitchen
+          </h1>
+        </center>
       </div>
 
       {isLoading && <p className="text-tide-400">Loading today's catch…</p>}
@@ -38,8 +40,12 @@ export default function Home() {
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {data?.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        {data?.map((product, idx) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            style={{ animationDelay: `${idx * 0.08}s` }}
+          />
         ))}
       </div>
     </main>
