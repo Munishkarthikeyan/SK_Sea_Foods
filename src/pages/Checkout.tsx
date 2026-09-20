@@ -21,6 +21,11 @@ export default function Checkout() {
     const notes = String(form.get('notes') || '')
 
     try {
+      // Generate the order's id ourselves so we never need the database to hand
+      // a row back after insert (anonymous customers aren't allowed to SELECT
+      // from orders, so .select() after insert would get blocked by RLS).
+      const orderId = crypto.randomUUID()
+
       // Items summary embedded directly on the order row, so the webhook
       // notification has everything it needs in one insert (no race condition).
       const itemsSummary = lines.map((l) => ({
@@ -30,24 +35,21 @@ export default function Checkout() {
       }))
 
       // 1. Create the order (with items embedded)
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          customer_name,
-          phone,
-          address,
-          notes,
-          total,
-          status: 'new',
-          items: itemsSummary,
-        })
-        .select()
-        .single()
+      const { error: orderError } = await supabase.from('orders').insert({
+        id: orderId,
+        customer_name,
+        phone,
+        address,
+        notes,
+        total,
+        status: 'new',
+        items: itemsSummary,
+      })
       if (orderError) throw orderError
 
       // 2. Also record detailed order_items rows (used by the admin Orders view)
       const items = lines.map((l) => ({
-        order_id: order.id,
+        order_id: orderId,
         product_id: l.product.id,
         name: l.product.name,
         quantity_kg: l.quantity_kg,
