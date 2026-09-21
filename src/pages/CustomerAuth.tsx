@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 
 export default function CustomerAuth() {
@@ -20,7 +21,13 @@ export default function CustomerAuth() {
     if (mode === 'signup') {
       const full_name = String(form.get('full_name') || '')
       const phone = String(form.get('phone') || '')
-      const { data, error } = await supabase.auth.signUp({ email, password })
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}${import.meta.env.BASE_URL}#/email-confirmed`,
+        },
+      })
       if (error) {
         setError(error.message)
         setLoading(false)
@@ -29,6 +36,13 @@ export default function CustomerAuth() {
       if (data.user) {
         await supabase.from('profiles').update({ full_name, phone }).eq('id', data.user.id)
       }
+
+      toast.success('Please verify your email to continue', {
+        description: `We've sent a confirmation link to ${email}.`,
+      })
+      setMode('login')
+      setLoading(false)
+      return
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {

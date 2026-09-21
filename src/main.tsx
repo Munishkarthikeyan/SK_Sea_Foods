@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App'
 import { CartProvider } from './context/CartContext'
 import { AuthProvider } from './context/AuthContext'
+import { Toaster } from 'sonner'
 import './index.css'
 
 const queryClient = new QueryClient()
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <CartProvider>
             <App />
+            <Toaster richColors position="top-center" />
           </CartProvider>
         </AuthProvider>
       </HashRouter>
