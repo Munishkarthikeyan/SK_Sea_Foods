@@ -16,6 +16,7 @@ export interface CartLine {
 
 export interface Order {
   id: string
+  customer_id: string | null
   customer_name: string
   phone: string
   address: string

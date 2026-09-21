@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 
 declare global {
   interface Window {
@@ -12,6 +13,7 @@ declare global {
 
 export default function Checkout() {
   const { lines, total, clearCart } = useCart()
+  const { session } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [submitting, setSubmitting] = useState(false)
@@ -53,6 +55,7 @@ export default function Checkout() {
 
     const { error: orderError } = await supabase.from('orders').insert({
       id: orderId,
+      customer_id: session!.user.id,
       ...details,
       total,
       status: 'new',
@@ -138,7 +141,7 @@ export default function Checkout() {
                 },
                 body: JSON.stringify({
                   ...response,
-                  order: { id: orderId, ...details, total, items: itemsSummary },
+                  order: { id: orderId, customer_id: session!.user.id, ...details, total, items: itemsSummary },
                 }),
               }
             )

@@ -61,6 +61,7 @@ Deno.serve(async (req: Request) => {
 
     const { error: orderError } = await supabase.from('orders').insert({
       id: order.id,
+      customer_id: order.customer_id,
       customer_name: order.customer_name,
       phone: order.phone,
       address: order.address,

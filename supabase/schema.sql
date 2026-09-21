@@ -129,3 +129,72 @@ end;
 $$;
 
 grant execute on function decrement_product_stock(uuid, numeric) to anon, authenticated;
+-- ============================================================
+-- Customer accounts + role-based access
+-- ============================================================
+
+-- Profiles table: one row per auth user, tracks role (owner vs customer)
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  role text not null default 'customer',
+  full_name text,
+  phone text,
+  created_at timestamptz not null default now()
+);
+
+alter table profiles enable row level security;
+
+create policy "Users can view their own profile"
+  on profiles for select
+  using (auth.uid() = id);
+
+create policy "Users can update their own profile"
+  on profiles for update
+  using (auth.uid() = id);
+
+-- Auto-create a profile (as 'customer') whenever someone signs up
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, role)
+  values (new.id, 'customer');
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+
+-- IMPORTANT: run this once for your OWN shop-owner account so it's treated
+-- as the owner, not a customer. Replace the email with your actual login email.
+-- update profiles set role = 'owner'
+-- where id = (select id from auth.users where email = 'youremail@example.com');
+
+-- Link orders to the customer who placed them
+alter table orders add column if not exists customer_id uuid references auth.users(id);
+
+-- Replace the old "anyone can insert" policy: orders now require a logged-in
+-- customer, and customers can only insert orders under their own account.
+drop policy if exists "Anyone can create an order" on orders;
+
+create policy "Customers can create their own orders"
+  on orders for insert
+  to authenticated
+  with check (customer_id = auth.uid());
+
+-- Replace the old owner-only select policy: a customer can see their own
+-- orders, and the shop owner can see all orders.
+drop policy if exists "Authenticated users can view orders" on orders;
+
+create policy "Customers can view their own orders, owner sees all"
+  on orders for select
+  to authenticated
+  using (
+    customer_id = auth.uid()
+    or exists (select 1 from profiles where id = auth.uid() and role = 'owner')
+  );

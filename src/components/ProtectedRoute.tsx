@@ -19,6 +19,6 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   }, [])
 
   if (loading) return <p className="p-8 text-center text-tide-400">Checking login…</p>
-  if (!session) return <Navigate to="/login" replace />
+  if (!session) return <Navigate to="/shop-login" replace />
   return <>{children}</>
 }
