@@ -23,12 +23,18 @@ Deno.serve(async (req: Request) => {
           .join('\n')
       : ''
 
+    const paymentLine =
+      order.payment_method === 'online'
+        ? `💳 Paid online (₹${order.total})`
+        : `💵 Cash/UPI on delivery`
+
     const message =
       `🐟 New order!\n` +
       `From: ${order.customer_name} (${order.phone})\n` +
       `Address: ${order.address}\n` +
       (itemLines ? `\nItems:\n${itemLines}\n` : '') +
       `\nTotal: ₹${order.total}\n` +
+      `${paymentLine}\n` +
       (order.notes ? `Notes: ${order.notes}\n` : '') +
       `\nCheck /admin to confirm.`
 

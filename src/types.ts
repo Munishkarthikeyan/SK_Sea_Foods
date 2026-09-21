@@ -24,6 +24,8 @@ export interface Order {
   status: string
   created_at: string
   items: { name: string; quantity_kg: number; price_per_kg: number }[] | null
+  payment_method: string
+  payment_status: string
 }
 
 export interface OrderItemRow {

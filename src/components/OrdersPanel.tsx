@@ -73,7 +73,13 @@ export default function OrdersPanel() {
               {order.status}
             </span>
           </div>
-
+           <p className="text-xs mb-2">
+            {order.payment_method === 'online' ? (
+              <span className="text-tide-900">💳 Paid online</span>
+            ) : (
+              <span className="text-tide-400">💵 Cash/UPI on delivery</span>
+            )}
+          </p>
           <div className="border-t border-tide-900/10 pt-3 flex flex-col gap-1">
             {itemsFor(order.id).map((item) => (
               <div key={item.id} className="flex justify-between text-sm">
