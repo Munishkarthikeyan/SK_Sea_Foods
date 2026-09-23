@@ -6,6 +6,7 @@ import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import OrderConfirmed from './pages/OrderConfirmed'
 import CustomerAuth from './pages/CustomerAuth'
+import EmailConfirmed from './pages/EmailConfirmed'
 import MyOrders from './pages/MyOrders'
 import Login from './pages/Login'
 import Admin from './pages/Admin'
@@ -18,6 +19,7 @@ export default function App() {
       {/* Landing / entry point: splash + choose Shop or Customer */}
       <Route path="/" element={<Landing />} />
       <Route path="/customer-auth" element={<CustomerAuth />} />
+      <Route path="/email-confirmed" element={<EmailConfirmed />} />
       <Route path="/shop-login" element={<Login />} />
 
       {/* Customer-only area */}
