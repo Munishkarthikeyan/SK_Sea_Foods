@@ -15,6 +15,11 @@ export default {
           DEFAULT: '#E2A33D',
           dark: '#C7862A',
         },
+        sea: {
+          light: '#E3F5F6',
+          DEFAULT: '#3FB6C2',
+          deep: '#1E7C88',
+        },
       },
       fontFamily: {
         display: ['"Fraunces"', 'serif'],

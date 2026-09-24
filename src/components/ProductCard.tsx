@@ -1,4 +1,5 @@
 import { CSSProperties, useState } from 'react'
+import { toast } from 'sonner'
 import { Product } from '../types'
 import { useCart } from '../context/CartContext'
 
@@ -60,7 +61,12 @@ export default function ProductCard({
           />
           <span className="text-xs text-tide-400">kg</span>
           <button
-            onClick={() => addToCart(product, qty)}
+            onClick={() => {
+              addToCart(product, qty)
+              toast.success('Your order has been added to the cart', {
+                description: 'Visit cart page!!',
+              })
+            }}
             disabled={soldOut}
             className="ml-auto bg-tide-900 text-paper text-sm px-3 py-1.5 hover:bg-tide-800 transition-colors disabled:opacity-30 disabled:pointer-events-none"
           >
