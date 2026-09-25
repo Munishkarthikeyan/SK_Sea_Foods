@@ -169,7 +169,7 @@ export default function CustomerAuth() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-5 bg-paper">
+    <main className="min-h-screen flex flex-col items-center justify-center gap-8 px-5">
       <div className="w-full max-w-sm">
         <Link to="/" className="text-sm text-tide-400 hover:text-tide-900 mb-6 inline-block">
           ← Back
