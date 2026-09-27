@@ -99,6 +99,17 @@ export default function Navbar() {
               menuOpen ? "-translate-y-2 -rotate-45" : "group-hover:w-7"
             }`}
           />
+
+          {count > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5">
+              {!menuOpen && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              )}
+              <span className="relative inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-600 text-white text-[10px] font-bold leading-none">
+                {count}
+              </span>
+            </span>
+          )}
         </button>
       </div>
 
