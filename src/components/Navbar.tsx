@@ -82,7 +82,7 @@ export default function Navbar() {
           onClick={() => setMenuOpen((open) => !open)}
           aria-label="Toggle menu"
           aria-expanded={menuOpen}
-          className="md:hidden relative h-10 w-10 flex flex-col items-center justify-center gap-1.5 group"
+          className="md:hidden relative overflow-visible h-10 w-10 flex flex-col items-center justify-center gap-1.5 group"
         >
           <span
             className={`block h-0.5 w-6 bg-tide-900 rounded-full transition-all duration-300 ${
@@ -101,7 +101,7 @@ export default function Navbar() {
           />
 
           {count > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-5 w-5">
+            <span className="pointer-events-none absolute -top-1 -right-1 z-30 flex h-5 w-5">
               {!menuOpen && (
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
               )}

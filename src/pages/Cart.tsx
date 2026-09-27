@@ -46,7 +46,7 @@ export default function Cart() {
             </p>
             <button
               onClick={() => removeFromCart(line.product.id)}
-              className="text-tide-400 hover:text-red-700 text-sm"
+              className="text-sm px-3 py-1.5 border border-red-700/30 text-red-700 hover:bg-red-50 transition-colors rounded-[5px]"
             >
               Remove
             </button>
