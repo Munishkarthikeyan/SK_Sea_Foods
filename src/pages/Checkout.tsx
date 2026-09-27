@@ -199,8 +199,8 @@ export default function Checkout() {
   }
 
   return (
-    <main className="max-w-lg mx-auto px-5 py-10">
-      <h1 className="font-display text-2xl font-bold mb-2">Delivery details</h1>
+    <main className="max-w-lg mx-auto px-4 sm:px-5 py-8 sm:py-10">
+      <h1 className="font-display text-xl sm:text-2xl font-bold mb-2">Delivery details</h1>
       <p className="text-sm text-tide-400 mb-6">Total: ₹{total.toFixed(0)}</p>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input

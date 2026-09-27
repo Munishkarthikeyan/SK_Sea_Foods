@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 import { Order, OrderItemRow } from '../types'
 
 export default function OrdersPanel() {
   const queryClient = useQueryClient()
+  const [sendingSmsFor, setSendingSmsFor] = useState<string | null>(null)
 
   const { data: orders, isLoading, error } = useQuery({
     queryKey: ['orders'],
@@ -27,9 +30,44 @@ export default function OrdersPanel() {
     },
   })
 
-  async function updateStatus(orderId: string, status: string) {
-    await supabase.from('orders').update({ status }).eq('id', orderId)
+  async function updateStatus(order: Order, status: string) {
+    await supabase.from('orders').update({ status }).eq('id', order.id)
     queryClient.invalidateQueries({ queryKey: ['orders'] })
+
+    if (status === 'confirmed') {
+      await sendConfirmationSms(order)
+    }
+  }
+
+  async function sendConfirmationSms(order: Order) {
+    setSendingSmsFor(order.id)
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-order-sms`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${sessionData.session?.access_token ?? import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            phone: order.phone,
+            message: 'Your order has been confirmed, you will get your order soon!!!',
+          }),
+        }
+      )
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error?.message || result.error || 'SMS failed')
+      toast.success('Order confirmed', { description: `SMS sent to ${order.phone}.` })
+    } catch (err) {
+      toast.error('Order confirmed, but SMS could not be sent', {
+        description: err instanceof Error ? err.message : 'Check Twilio setup.',
+      })
+    } finally {
+      setSendingSmsFor(null)
+    }
   }
 
   function itemsFor(orderId: string) {
@@ -45,8 +83,8 @@ export default function OrdersPanel() {
   return (
     <div className="flex flex-col gap-4">
       {orders?.map((order) => (
-        <div key={order.id} className="border border-tide-900/10 bg-white/60 p-4">
-          <div className="flex items-start justify-between gap-4 mb-3">
+        <div key={order.id} className="border border-tide-900/10 bg-white/60 p-3 sm:p-4">
+          <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
             <div>
               <p className="font-semibold">{order.customer_name}</p>
               <p className="text-sm text-tide-400">{order.phone}</p>
@@ -91,20 +129,21 @@ export default function OrdersPanel() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-tide-900/10">
+          <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-tide-900/10">
             <span className="font-bold">Total: ₹{order.total.toFixed(0)}</span>
             <div className="flex gap-2">
               {order.status !== 'confirmed' && order.status !== 'delivered' && (
                 <button
-                  onClick={() => updateStatus(order.id, 'confirmed')}
-                  className="text-xs px-3 py-1.5 bg-tide-900 text-paper hover:bg-tide-800"
+                  onClick={() => updateStatus(order, 'confirmed')}
+                  disabled={sendingSmsFor === order.id}
+                  className="text-xs px-3 py-1.5 bg-tide-900 text-paper hover:bg-tide-800 disabled:opacity-50"
                 >
-                  Confirm
+                  {sendingSmsFor === order.id ? 'Confirming…' : 'Confirm'}
                 </button>
               )}
               {order.status !== 'delivered' && (
                 <button
-                  onClick={() => updateStatus(order.id, 'delivered')}
+                  onClick={() => updateStatus(order, 'delivered')}
                   className="text-xs px-3 py-1.5 border border-tide-900/20 hover:bg-tide-900/5"
                 >
                   Mark delivered

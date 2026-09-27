@@ -17,13 +17,13 @@ export default function Home() {
   })
 
   return (
-    <main className="max-w-10xl px-5 py-10">
+    <main className="w-full max-w-7xl mx-auto px-4 sm:px-5 py-8 sm:py-10">
       <div className="mb-8">
         <center>
           <p className="text-xs uppercase tracking-wide text-catch-dark font-semibold mb-1">
             Fresh in today
           </p>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight text-tide-900">
+          <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight text-tide-900 px-2">
             Today's catch, straight from the boat to your kitchen
           </h1>
         </center>

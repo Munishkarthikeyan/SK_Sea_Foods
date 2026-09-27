@@ -190,18 +190,18 @@ export default function Admin() {
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-5 py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl font-bold">Shop dashboard</h1>
+    <main className="max-w-3xl mx-auto px-4 sm:px-5 py-6 sm:py-10">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h1 className="font-display text-xl sm:text-2xl font-bold">Shop dashboard</h1>
         <button onClick={signOut} className="text-sm text-tide-400 hover:text-tide-900">
           Sign out
         </button>
       </div>
 
-      <div className="flex gap-6 border-b border-tide-900/10 mb-8">
+      <div className="flex gap-4 sm:gap-6 border-b border-tide-900/10 mb-8 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
           onClick={() => setTab('catch')}
-          className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${
+          className={`pb-3 text-sm font-semibold border-b-2 -mb-px whitespace-nowrap ${
             tab === 'catch'
               ? 'border-tide-900 text-tide-900'
               : 'border-transparent text-tide-400 hover:text-tide-600'
@@ -211,7 +211,7 @@ export default function Admin() {
         </button>
         <button
           onClick={() => setTab('bulk')}
-          className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${
+          className={`pb-3 text-sm font-semibold border-b-2 -mb-px whitespace-nowrap ${
             tab === 'bulk'
               ? 'border-tide-900 text-tide-900'
               : 'border-transparent text-tide-400 hover:text-tide-600'
@@ -221,7 +221,7 @@ export default function Admin() {
         </button>
         <button
           onClick={() => setTab('orders')}
-          className={`pb-3 text-sm font-semibold border-b-2 -mb-px ${
+          className={`pb-3 text-sm font-semibold border-b-2 -mb-px whitespace-nowrap ${
             tab === 'orders'
               ? 'border-tide-900 text-tide-900'
               : 'border-transparent text-tide-400 hover:text-tide-600'
@@ -249,7 +249,7 @@ export default function Admin() {
           placeholder="Category (e.g. Sea fish)"
           className="border border-tide-900/20 px-3 py-2 bg-white"
         />
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <input
             name="price_per_kg"
             type="number"
@@ -288,8 +288,8 @@ export default function Admin() {
         </button>
       </form>
 
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-display text-xl font-bold">Current listings</h2>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h2 className="font-display text-lg sm:text-xl font-bold">Current listings</h2>
         <button onClick={markAllSoldOut} className="text-sm text-tide-400 hover:text-red-700">
           Mark all sold out
         </button>
@@ -299,7 +299,7 @@ export default function Admin() {
         {products?.map((p) =>
           editingId === p.id ? (
             <div key={p.id} className="py-3 flex flex-col gap-3 bg-sea-light/60 px-3 -mx-3">
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   value={editForm.name}
                   onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
@@ -313,7 +313,7 @@ export default function Admin() {
                   className="border border-tide-900/20 px-2 py-1.5 bg-white text-sm flex-1"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="number"
                   min="0"
@@ -353,14 +353,34 @@ export default function Admin() {
           ) : (
             <div
               key={p.id}
-              className="py-3 flex items-center gap-4 transition-colors hover:bg-sea-light/60 px-3 -mx-3"
+              className="py-3 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 transition-colors hover:bg-sea-light/60 px-3 -mx-3"
             >
-              <div className="w-14 h-14 bg-tide-900/5 flex-shrink-0 overflow-hidden rounded">
-                {p.photo_url && (
-                  <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover" />
-                )}
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-tide-900/5 flex-shrink-0 overflow-hidden rounded">
+                  {p.photo_url && (
+                    <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="flex-1 sm:hidden">
+                  <p className="font-semibold">{p.name}</p>
+                  <p className="text-sm text-tide-400">
+                    ₹{p.price_per_kg}/kg · {p.stock_kg} kg
+                  </p>
+                  <label className="text-xs text-tide-900 underline underline-offset-2 cursor-pointer">
+                    {p.photo_url ? 'Change photo' : 'Add photo'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) uploadPhotoFor(p.id, file)
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
-              <div className="flex-1">
+              <div className="hidden sm:block flex-1">
                 <p className="font-semibold">{p.name}</p>
                 <p className="text-sm text-tide-400">
                   ₹{p.price_per_kg}/kg · {p.stock_kg} kg
@@ -378,28 +398,30 @@ export default function Admin() {
                   />
                 </label>
               </div>
-              <button
-                onClick={() => toggleAvailable(p)}
-                className={`text-sm px-3 py-1 border ${
-                  p.available
-                    ? 'border-tide-900/20 text-tide-900'
-                    : 'border-red-700/30 text-red-700'
-                }`}
-              >
-                {p.available ? 'Available' : 'Sold out'}
-              </button>
-              <button
-                onClick={() => startEdit(p)}
-                className="text-sm px-3 py-1 border border-tide-900/20 text-tide-900 hover:bg-white"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => deleteProduct(p)}
-                className="text-sm px-3 py-1 border border-red-700/30 text-red-700 hover:bg-red-50"
-              >
-                Remove
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => toggleAvailable(p)}
+                  className={`text-sm px-3 py-1 border ${
+                    p.available
+                      ? 'border-tide-900/20 text-tide-900'
+                      : 'border-red-700/30 text-red-700'
+                  }`}
+                >
+                  {p.available ? 'Available' : 'Sold out'}
+                </button>
+                <button
+                  onClick={() => startEdit(p)}
+                  className="text-sm px-3 py-1 border border-tide-900/20 text-tide-900 hover:bg-white"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => deleteProduct(p)}
+                  className="text-sm px-3 py-1 border border-red-700/30 text-red-700 hover:bg-red-50"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           )
         )}
