@@ -34,8 +34,29 @@ export default function OrdersPanel() {
     await supabase.from('orders').update({ status }).eq('id', order.id)
     queryClient.invalidateQueries({ queryKey: ['orders'] })
 
-    if (status === 'confirmed') {
-      await sendConfirmationSms(order)
+    // Email the customer, best effort -- if this fails, the status change
+    // above has already gone through, so we don't block on it.
+    if (order.customer_id) {
+      try {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/notify-customer-status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            customer_id: order.customer_id,
+            customer_name: order.customer_name,
+            status,
+            items: order.items,
+            total: order.total,
+          }),
+        })
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Could not notify customer:', err)
+      }
     }
   }
 
