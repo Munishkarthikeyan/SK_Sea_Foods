@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { Product } from '../types'
 import ProductCard from '../components/ProductCard'
-import CategoryCarousel from '../components/CategoryCarousel'
+import CategoryCarousel from '../components/Categorycarousel'
 
 // Matches a product's free-text category/name against one of the fixed
 // carousel categories. Substring-based, so it copes with existing category
