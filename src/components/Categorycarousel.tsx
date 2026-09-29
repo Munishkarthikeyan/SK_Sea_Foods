@@ -7,17 +7,57 @@ export interface CategoryDef {
   image?: string;
 }
 
+
 export const CATEGORIES: CategoryDef[] = [
-  { key: null, label: "Today Deals", image: "/images/categories/today.png",badge: "SALE" },
-  { key: null, label: "Sea Fish", image: "/images/categories/Toadysale.jpg"},
-  { key: "freshwater-fish", label: "Freshwater Fish", image: "/images/categories/freshwater.jpg" },
-  { key: "crabs", label: "Crabs", image: "/images/categories/crab.png" },
-  { key: "prawns", label: "Prawns", image: "/images/categories/prawns.jpg" },
-  { key: "fillets", label: "Fillets & Slices", image: "/images/categories/slices.jpg" },
-  { key: "combos", label: "Combos", image: "/images/categories/combo.jpg" },
-  { key: "lobsters", label: "Lobsters", image: "/images/categories/lobster.jpg" },
-  { key: "dry-fish", label: "Dry Fish", image: "/images/categories/dry.jpg" },
+  {
+    key: null,
+    label: "Today Deals",
+    image: `${import.meta.env.BASE_URL}images/categories/today.png`,
+    badge: "SALE",
+  },
+  {
+    key: null,
+    label: "Sea Fish",
+    image: `${import.meta.env.BASE_URL}images/categories/Toadysale.jpg`,
+  },
+  {
+    key: "freshwater-fish",
+    label: "Freshwater Fish",
+    image: `${import.meta.env.BASE_URL}images/categories/freshwater.jpg`,
+  },
+  {
+    key: "crabs",
+    label: "Crabs",
+    image: `${import.meta.env.BASE_URL}images/categories/crab.png`,
+  },
+  {
+    key: "prawns",
+    label: "Prawns",
+    image: `${import.meta.env.BASE_URL}images/categories/prawns.jpg`,
+  },
+  {
+    key: "fillets",
+    label: "Fillets & Slices",
+    image: `${import.meta.env.BASE_URL}images/categories/slices.jpg`,
+  },
+  {
+    key: "combos",
+    label: "Combos",
+    image: `${import.meta.env.BASE_URL}images/categories/combo.jpg`,
+  },
+  {
+    key: "lobsters",
+    label: "Lobsters",
+    image: `${import.meta.env.BASE_URL}images/categories/lobster.jpg`,
+  },
+  {
+    key: "dry-fish",
+    label: "Dry Fish",
+    image: `${import.meta.env.BASE_URL}images/categories/dry.jpg`,
+  },
 ];
+
+
 
 export default function CategoryCarousel() {
   const location = useLocation();
