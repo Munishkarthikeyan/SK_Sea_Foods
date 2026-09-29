@@ -4,21 +4,40 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { Product } from '../types'
 import ProductCard from '../components/ProductCard'
+import CategoryCarousel from '../components/CategoryCarousel'
 
-// Matches a product's free-text category against one of the four fixed
-// filters used in the navbar. Substring-based, so it copes with category
-// text like "Sea fish" or "Shellfish" without requiring exact matches.
+// Matches a product's free-text category/name against one of the fixed
+// carousel categories. Substring-based, so it copes with existing category
+// text like "Sea fish" or "Shellfish" without needing exact matches.
 function matchesFilter(product: Product, filter: string) {
   const text = `${product.category} ${product.name}`.toLowerCase()
-  if (filter === 'fish') return text.includes('fish') && !text.includes('shell')
-  if (filter === 'crab') return text.includes('crab')
-  if (filter === 'prawn') return text.includes('prawn') || text.includes('shrimp')
-  return true
+  switch (filter) {
+    case 'sea-fish':
+      return text.includes('sea') && text.includes('fish')
+    case 'freshwater-fish':
+      return text.includes('freshwater') || text.includes('fresh water')
+    case 'crabs':
+      return text.includes('crab')
+    case 'prawns':
+      return text.includes('prawn') || text.includes('shrimp')
+    case 'fillets':
+      return text.includes('fillet') || text.includes('slice')
+    case 'combos':
+      return text.includes('combo')
+    case 'deals':
+      return text.includes('deal') || text.includes('sale') || text.includes('offer')
+    case 'lobsters':
+      return text.includes('lobster')
+    case 'dry-fish':
+      return text.includes('dry')
+    default:
+      return true
+  }
 }
 
 export default function Home() {
   const [searchParams] = useSearchParams()
-  const selectedCategory = searchParams.get('category') // 'fish' | 'crab' | 'prawn' | null
+  const selectedCategory = searchParams.get('category')
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['products'],
@@ -50,6 +69,8 @@ export default function Home() {
           </h1>
         </center>
       </div>
+
+      <CategoryCarousel />
 
       {isLoading && <p className="text-tide-400">Loading today's catch…</p>}
       {error && (
