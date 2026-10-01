@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useLocation, Link } from "react-router-dom";
 
 export interface CategoryDef {
@@ -7,7 +8,6 @@ export interface CategoryDef {
   image?: string;
 }
 
-
 export const CATEGORIES: CategoryDef[] = [
   {
     key: null,
@@ -16,9 +16,9 @@ export const CATEGORIES: CategoryDef[] = [
     badge: "SALE",
   },
   {
-    key: null,
+    key: "sea-fish",
     label: "Sea Fish",
-    image: `${import.meta.env.BASE_URL}images/categories/Toadysale.jpg`,
+    image: `${import.meta.env.BASE_URL}images/categories/Sea.jpg`,
   },
   {
     key: "freshwater-fish",
@@ -57,15 +57,79 @@ export const CATEGORIES: CategoryDef[] = [
   },
 ];
 
-
-
 export default function CategoryCarousel() {
   const location = useLocation();
 
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number | null>(null);
+  const isPausedRef = useRef(false);
+
   const activeCategory = new URLSearchParams(location.search).get("category");
 
-  // Duplicate the categories for continuous scrolling
   const items = [...CATEGORIES, ...CATEGORIES];
+
+  /*
+   * Automatic scrolling
+   */
+  useEffect(() => {
+    const carousel = carouselRef.current;
+
+    if (!carousel) return;
+
+    const speed = 0.5;
+
+    const animate = () => {
+      if (!isPausedRef.current) {
+        carousel.scrollLeft += speed;
+
+        /*
+         * Because we duplicated CATEGORIES,
+         * reset to the beginning of the second set.
+         */
+        const halfWidth = carousel.scrollWidth / 2;
+
+        if (carousel.scrollLeft >= halfWidth) {
+          carousel.scrollLeft = 0;
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+
+  /*
+   * Manual arrow scrolling
+   */
+  const scrollCarousel = (direction: "left" | "right") => {
+    const carousel = carouselRef.current;
+
+    if (!carousel) return;
+
+    /*
+     * Pause automatic animation while manually scrolling.
+     */
+    isPausedRef.current = true;
+
+    carousel.scrollBy({
+      left: direction === "left" ? -320 : 320,
+      behavior: "smooth",
+    });
+
+    /*
+     * Resume automatic animation after manual scroll.
+     */
+    window.setTimeout(() => {
+      isPausedRef.current = false;
+    }, 800);
+  };
 
   return (
     <div className="relative mb-8 w-full overflow-hidden">
@@ -73,20 +137,19 @@ export default function CategoryCarousel() {
       <button
         type="button"
         aria-label="Scroll left"
-        className="absolute left-1 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-tide-900 shadow-md hover:bg-tide-900/5 active:scale-95"
+        onClick={() => scrollCarousel("left")}
+        className="absolute left-1 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-tide-900 shadow-md transition hover:bg-tide-900/5 active:scale-95"
       >
         ‹
       </button>
 
       {/* Carousel viewport */}
-      <div className="overflow-hidden px-10">
+      <div
+        ref={carouselRef}
+        className="overflow-x-hidden px-10 scrollbar-hide"
+      >
         {/* Moving content */}
-        <div
-          className="flex w-max gap-4"
-          style={{
-            animation: "categoryAutoScroll 40s linear infinite",
-          }}
-        >
+        <div className="flex w-max gap-4">
           {items.map(({ key, label, image, badge }, index) => {
             const isActive = activeCategory === key;
 
@@ -94,8 +157,10 @@ export default function CategoryCarousel() {
               <Link
                 key={`${label}-${index}`}
                 to={key ? `/shop?category=${key}` : "/shop"}
-                className={`relative flex w-28 flex-shrink-0 flex-col items-center gap-2 rounded-xl border bg-white px-3 py-4 shadow-sm ${
-                  isActive ? "border-tide-900 shadow-md" : "border-transparent"
+                className={`relative flex w-28 flex-shrink-0 flex-col items-center gap-2 rounded-xl border bg-white px-3 py-4 shadow-sm transition ${
+                  isActive
+                    ? "border-tide-900 shadow-md"
+                    : "border-transparent hover:shadow-md"
                 }`}
               >
                 {badge && (
@@ -127,23 +192,12 @@ export default function CategoryCarousel() {
       <button
         type="button"
         aria-label="Scroll right"
-        className="absolute right-1 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-tide-900 shadow-md hover:bg-tide-900/5 active:scale-95"
+        onClick={() => scrollCarousel("right")}
+        className="absolute right-1 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl text-tide-900 shadow-md transition hover:bg-tide-900/5 active:scale-95"
       >
         ›
       </button>
-
-      {/* Animation */}
-      <style>{`
-        @keyframes categoryAutoScroll {
-          from {
-            transform: translateX(0);
-          }
-
-          to {
-            transform: translateX(calc(-50% - 8px));
-          }
-        }
-      `}</style>
     </div>
   );
 }
+

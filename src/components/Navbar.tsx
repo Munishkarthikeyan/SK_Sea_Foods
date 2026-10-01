@@ -63,7 +63,7 @@ export default function Navbar() {
           {session ? (
             <button
               onClick={handleSignOut}
-              className="bg-black text-white px-4 py-2 rounded-full hover:bg-neutral-800 hover:scale-105 transition-all duration-150"
+              className="bg-red-600 text-white px-4 py-2 rounded-full  hover:scale-105 transition-all duration-150"
             >
               Log out
             </button>
