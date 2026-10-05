@@ -1,30 +1,39 @@
-import { FormEvent, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
-
+import { FormEvent, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
+import { Link } from "react-router-dom";
 export default function Login() {
-  const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    const form = new FormData(e.currentTarget)
-    const email = String(form.get('email'))
-    const password = String(form.get('password'))
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    setLoading(false)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const form = new FormData(e.currentTarget);
+    const email = String(form.get("email"));
+    const password = String(form.get("password"));
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
     if (error) {
-      setError(error.message)
-      return
+      setError(error.message);
+      return;
     }
-    navigate('/admin')
+    navigate("/admin");
   }
 
   return (
     <main className="max-w-sm mx-auto px-5 py-20">
+      <Link
+        to="/"
+        className="text-sm text-tide-400 hover:text-tide-900 mb-6 inline-block"
+      >
+        ← Back
+      </Link>
       <h1 className="font-display text-2xl font-bold mb-6">Shop login</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
@@ -47,9 +56,9 @@ export default function Login() {
           disabled={loading}
           className="bg-tide-900 text-paper py-2.5 font-semibold hover:bg-tide-800 transition-colors disabled:opacity-50"
         >
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </main>
-  )
+  );
 }
