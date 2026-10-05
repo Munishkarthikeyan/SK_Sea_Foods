@@ -58,6 +58,9 @@ export default function OrdersPanel() {
         console.error('Could not notify customer:', err)
       }
     }
+    if (status === 'confirmed') {
+    await sendConfirmationSms(order)
+  }
   }
 
   async function sendConfirmationSms(order: Order) {
