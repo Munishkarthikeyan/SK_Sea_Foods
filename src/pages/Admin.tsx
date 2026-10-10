@@ -4,10 +4,12 @@ import { supabase } from '../lib/supabase'
 import { Product } from '../types'
 import OrdersPanel from '../components/OrdersPanel'
 import BulkUpload from '../components/BulkUpload'
+import SalesDashboard from '../components/SalesDashboard'
+import FishBackground from '../components/FishBackground'
 
 export default function Admin() {
   const queryClient = useQueryClient()
-  const [tab, setTab] = useState<'catch' | 'bulk' | 'orders'>('catch')
+  const [tab, setTab] = useState<'sales' | 'catch' | 'bulk' | 'orders'>('sales')
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -190,7 +192,13 @@ export default function Admin() {
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-4 sm:px-5 py-6 sm:py-10">
+    <main
+      className={`${
+        tab === 'sales' ? 'max-w-6xl' : 'max-w-3xl'
+      } mx-auto px-4 sm:px-5 py-6 sm:py-10`}
+    >
+      <FishBackground />
+
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="font-display text-xl sm:text-2xl font-bold">Shop dashboard</h1>
         <button onClick={signOut} className="text-sm text-tide-400 hover:text-tide-900">
@@ -199,6 +207,16 @@ export default function Admin() {
       </div>
 
       <div className="flex gap-4 sm:gap-6 border-b border-tide-900/10 mb-8 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button
+          onClick={() => setTab('sales')}
+          className={`pb-3 text-sm font-semibold border-b-2 -mb-px whitespace-nowrap ${
+            tab === 'sales'
+              ? 'border-tide-900 text-tide-900'
+              : 'border-transparent text-tide-400 hover:text-tide-600'
+          }`}
+        >
+          Sales
+        </button>
         <button
           onClick={() => setTab('catch')}
           className={`pb-3 text-sm font-semibold border-b-2 -mb-px whitespace-nowrap ${
@@ -231,6 +249,7 @@ export default function Admin() {
         </button>
       </div>
 
+      {tab === 'sales' && <SalesDashboard />}
       {tab === 'orders' && <OrdersPanel />}
       {tab === 'bulk' && <BulkUpload />}
 

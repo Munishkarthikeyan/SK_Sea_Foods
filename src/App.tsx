@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Landing from './pages/Landing'
 import Home from './pages/Home'
@@ -12,10 +12,21 @@ import Login from './pages/Login'
 import Admin from './pages/Admin'
 import ProtectedRoute from './components/ProtectedRoute'
 import CustomerProtectedRoute from './components/CustomerProtectedRoute'
+import FishBackground from './components/FishBackground'
+
+// Pages that get the swimming-fish background (the customer area).
+// It lives here, above <Routes>, so it stays mounted while the customer
+// moves between these pages and the fish keep swimming without restarting.
+const FISH_PATHS = ['/shop', '/cart', '/checkout', '/order-confirmed', '/my-orders']
 
 export default function App() {
+  const { pathname } = useLocation()
+  const showFish = FISH_PATHS.includes(pathname)
+
   return (
-    <Routes>
+    <>
+      {showFish && <FishBackground />}
+      <Routes>
       {/* Landing / entry point: splash + choose Shop or Customer */}
       <Route path="/" element={<Landing />} />
       <Route path="/customer-auth" element={<CustomerAuth />} />
@@ -78,6 +89,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-    </Routes>
+      </Routes>
+    </>
   )
 }
