@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { Order } from '../types'
-
+import TelegramConnect from '../components/TelegramConnect'
 export default function MyOrders() {
   const { session } = useAuth()
 
@@ -23,7 +23,7 @@ export default function MyOrders() {
   return (
     <main className="max-w-2xl mx-auto px-4 sm:px-5 py-8 sm:py-10">
       <h1 className="font-display text-xl sm:text-2xl font-semibold mb-6">My orders</h1>
-
+      <TelegramConnect />
       {isLoading && <p className="text-tide-400">Loading…</p>}
       {error && <p className="text-red-700 text-sm">Couldn't load your orders.</p>}
       {orders && orders.length === 0 && (

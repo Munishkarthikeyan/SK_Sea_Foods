@@ -3,34 +3,34 @@ import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../lib/supabase'
 
-type LoginMethod = 'email' | 'phone'
-type PhonePhase = 'enter-phone' | 'enter-otp'
+type LoginMethod = 'password' | 'otp'
+type OtpPhase = 'enter-email' | 'enter-otp'
 
-const OTP_LENGTH = 4
+const OTP_LENGTH = 6
 
 export default function CustomerAuth() {
   const navigate = useNavigate()
 
   // Which of the two login types is selected
-  const [method, setMethod] = useState<LoginMethod>('email')
+  const [method, setMethod] = useState<LoginMethod>('password')
 
   // ---- Email + password state ----
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // ---- Mobile + OTP state ----
-  const [phonePhase, setPhonePhase] = useState<PhonePhase>('enter-phone')
-  const [phoneNumber, setPhoneNumber] = useState('')
+  // ---- Email OTP state ----
+  const [otpPhase, setOtpPhase] = useState<OtpPhase>('enter-email')
+  const [otpEmail, setOtpEmail] = useState('')
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''))
-  const [phoneError, setPhoneError] = useState<string | null>(null)
-  const [phoneLoading, setPhoneLoading] = useState(false)
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [otpLoading, setOtpLoading] = useState(false)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
   function switchMethod(next: LoginMethod) {
     setMethod(next)
     setError(null)
-    setPhoneError(null)
+    setOtpError(null)
   }
 
   // ---------------- Email + password ----------------
@@ -81,35 +81,33 @@ export default function CustomerAuth() {
     navigate('/shop')
   }
 
-  // ---------------- Mobile + OTP ----------------
-  function normalizedPhone() {
-    // India-only numbers for now, to match the rest of the storefront (₹, Razorpay).
-    const digits = phoneNumber.replace(/\D/g, '')
-    return `+91${digits}`
-  }
-
+  // ---------------- Email OTP (passwordless) ----------------
   async function sendOtp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setPhoneError(null)
+    setOtpError(null)
 
-    const digits = phoneNumber.replace(/\D/g, '')
-    if (digits.length !== 10) {
-      setPhoneError('Enter a valid 10-digit mobile number.')
+    if (!otpEmail.includes('@')) {
+      setOtpError('Enter a valid email address.')
       return
     }
 
-    setPhoneLoading(true)
-    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone() })
-    setPhoneLoading(false)
+    setOtpLoading(true)
+    // shouldCreateUser: true lets a brand-new customer sign up via OTP too,
+    // not just log in -- one flow covers both cases.
+    const { error } = await supabase.auth.signInWithOtp({
+      email: otpEmail,
+      options: { shouldCreateUser: true },
+    })
+    setOtpLoading(false)
 
     if (error) {
-      setPhoneError(error.message)
+      setOtpError(error.message)
       return
     }
 
     setOtp(Array(OTP_LENGTH).fill(''))
-    setPhonePhase('enter-otp')
-    toast.success('OTP sent', { description: `We've texted a code to ${normalizedPhone()}.` })
+    setOtpPhase('enter-otp')
+    toast.success('Code sent', { description: `We've emailed a code to ${otpEmail}.` })
     setTimeout(() => otpRefs.current[0]?.focus(), 50)
   }
 
@@ -135,21 +133,21 @@ export default function CustomerAuth() {
     e.preventDefault()
     const token = otp.join('')
     if (token.length !== OTP_LENGTH) {
-      setPhoneError(`Enter the ${OTP_LENGTH}-digit code.`)
+      setOtpError(`Enter the ${OTP_LENGTH}-digit code.`)
       return
     }
 
-    setPhoneError(null)
-    setPhoneLoading(true)
+    setOtpError(null)
+    setOtpLoading(true)
     const { error } = await supabase.auth.verifyOtp({
-      phone: normalizedPhone(),
+      email: otpEmail,
       token,
-      type: 'sms',
+      type: 'email',
     })
-    setPhoneLoading(false)
+    setOtpLoading(false)
 
     if (error) {
-      setPhoneError(error.message)
+      setOtpError(error.message)
       return
     }
 
@@ -157,19 +155,22 @@ export default function CustomerAuth() {
   }
 
   async function resendOtp() {
-    setPhoneError(null)
-    setPhoneLoading(true)
-    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone() })
-    setPhoneLoading(false)
+    setOtpError(null)
+    setOtpLoading(true)
+    const { error } = await supabase.auth.signInWithOtp({
+      email: otpEmail,
+      options: { shouldCreateUser: true },
+    })
+    setOtpLoading(false)
     if (error) {
-      setPhoneError(error.message)
+      setOtpError(error.message)
       return
     }
-    toast.success('OTP resent', { description: `Sent again to ${normalizedPhone()}.` })
+    toast.success('Code resent', { description: `Sent again to ${otpEmail}.` })
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-8 px-5">
+    <main className="min-h-screen flex flex-col items-center justify-center px-5 bg-paper">
       <div className="w-full max-w-sm">
         <Link to="/" className="text-sm text-tide-400 hover:text-tide-900 mb-6 inline-block">
           ← Back
@@ -180,15 +181,15 @@ export default function CustomerAuth() {
         <div className="grid grid-cols-2 gap-3 mb-6">
           <button
             type="button"
-            onClick={() => switchMethod('email')}
+            onClick={() => switchMethod('password')}
             className={`flex flex-col items-center gap-2 border rounded-lg px-3 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-              method === 'email'
+              method === 'password'
                 ? 'border-tide-900 bg-sea-light/70 shadow-md'
                 : 'border-tide-900/10 bg-white/60 hover:border-sea/40'
             }`}
           >
             <svg
-              className={`h-6 w-6 ${method === 'email' ? 'text-tide-900' : 'text-tide-400'}`}
+              className={`h-6 w-6 ${method === 'password' ? 'text-tide-900' : 'text-tide-400'}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -205,15 +206,15 @@ export default function CustomerAuth() {
 
           <button
             type="button"
-            onClick={() => switchMethod('phone')}
+            onClick={() => switchMethod('otp')}
             className={`flex flex-col items-center gap-2 border rounded-lg px-3 py-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${
-              method === 'phone'
+              method === 'otp'
                 ? 'border-tide-900 bg-sea-light/70 shadow-md'
                 : 'border-tide-900/10 bg-white/60 hover:border-sea/40'
             }`}
           >
             <svg
-              className={`h-6 w-6 ${method === 'phone' ? 'text-tide-900' : 'text-tide-400'}`}
+              className={`h-6 w-6 ${method === 'otp' ? 'text-tide-900' : 'text-tide-400'}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -222,15 +223,15 @@ export default function CustomerAuth() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M11 4a1 1 0 011-1h0a1 1 0 011 1M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2zm3.5 15.5h1"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
               />
             </svg>
-            <span className="text-sm font-semibold">Mobile OTP</span>
+            <span className="text-sm font-semibold">Email OTP</span>
           </button>
         </div>
 
         {/* ---- Email + password form ---- */}
-        {method === 'email' && (
+        {method === 'password' && (
           <>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {mode === 'signup' && (
@@ -286,43 +287,39 @@ export default function CustomerAuth() {
           </>
         )}
 
-        {/* ---- Mobile + OTP form ---- */}
-        {method === 'phone' && (
+        {/* ---- Email OTP form ---- */}
+        {method === 'otp' && (
           <>
-            {phonePhase === 'enter-phone' ? (
+            {otpPhase === 'enter-email' ? (
               <form onSubmit={sendOtp} className="flex flex-col gap-4">
-                <div className="flex items-center border border-tide-900/20 bg-white px-3">
-                  <span className="text-tide-400 text-sm pr-2 border-r border-tide-900/10 mr-2">
-                    +91
-                  </span>
-                  <input
-                    name="phone"
-                    type="tel"
-                    inputMode="numeric"
-                    required
-                    maxLength={10}
-                    placeholder="10-digit mobile number"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    className="flex-1 py-2 outline-none bg-transparent"
-                  />
-                </div>
-                {phoneError && <p className="text-red-700 text-sm">{phoneError}</p>}
+                <input
+                  name="otpEmail"
+                  type="email"
+                  required
+                  placeholder="Email address"
+                  value={otpEmail}
+                  onChange={(e) => setOtpEmail(e.target.value)}
+                  className="border border-tide-900/20 px-3 py-2 bg-white"
+                />
+                {otpError && <p className="text-red-700 text-sm">{otpError}</p>}
                 <button
                   type="submit"
-                  disabled={phoneLoading}
+                  disabled={otpLoading}
                   className="bg-black text-white py-2.5 rounded-full font-semibold hover:bg-neutral-800 transition-colors disabled:opacity-50"
                 >
-                  {phoneLoading ? 'Sending…' : 'Send OTP'}
+                  {otpLoading ? 'Sending…' : 'Send code'}
                 </button>
+                <p className="text-xs text-tide-400 text-center">
+                  No password needed — we'll email you a one-time code.
+                </p>
               </form>
             ) : (
               <form onSubmit={verifyOtp} className="flex flex-col gap-4">
                 <p className="text-sm text-tide-600">
                   Enter the {OTP_LENGTH}-digit code sent to{' '}
-                  <span className="font-semibold text-tide-900">{normalizedPhone()}</span>
+                  <span className="font-semibold text-tide-900">{otpEmail}</span>
                 </p>
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-2">
                   {otp.map((digit, i) => (
                     <input
                       key={i}
@@ -333,36 +330,36 @@ export default function CustomerAuth() {
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className="w-12 h-12 text-center text-lg font-semibold border border-tide-900/20 bg-white focus:border-tide-900 focus:outline-none transition-colors"
+                      className="w-10 h-12 text-center text-lg font-semibold border border-tide-900/20 bg-white focus:border-tide-900 focus:outline-none transition-colors"
                     />
                   ))}
                 </div>
-                {phoneError && <p className="text-red-700 text-sm text-center">{phoneError}</p>}
+                {otpError && <p className="text-red-700 text-sm text-center">{otpError}</p>}
                 <button
                   type="submit"
-                  disabled={phoneLoading}
+                  disabled={otpLoading}
                   className="bg-black text-white py-2.5 rounded-full font-semibold hover:bg-neutral-800 transition-colors disabled:opacity-50"
                 >
-                  {phoneLoading ? 'Verifying…' : 'Verify & continue'}
+                  {otpLoading ? 'Verifying…' : 'Verify & continue'}
                 </button>
                 <div className="flex items-center justify-between text-sm">
                   <button
                     type="button"
                     onClick={() => {
-                      setPhonePhase('enter-phone')
-                      setPhoneError(null)
+                      setOtpPhase('enter-email')
+                      setOtpError(null)
                     }}
                     className="text-tide-400 hover:text-tide-900 underline underline-offset-4"
                   >
-                    Change number
+                    Change email
                   </button>
                   <button
                     type="button"
                     onClick={resendOtp}
-                    disabled={phoneLoading}
+                    disabled={otpLoading}
                     className="text-tide-400 hover:text-tide-900 underline underline-offset-4 disabled:opacity-50"
                   >
-                    Resend OTP
+                    Resend code
                   </button>
                 </div>
               </form>
